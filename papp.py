@@ -51,34 +51,38 @@ with col2:
 
 # 6. Analysis Logic
 if st.button("Generate Development Strategy", key="deploy_btn"):
-    # Initialize features to 0 based on model's requirements
+    # Ensure all data is float64 to match Scikit-Learn defaults
     input_dict = {col: [0.0] for col in model_features}
     
-    # Map Numerical Data
-    if 'Year' in input_dict: input_dict['Year'] = [float(target_year)]
-    if 'Prev_Population' in input_dict: input_dict['Prev_Population'] = [float(pop_prev)]
-    if 'Prev2_Population' in input_dict: input_dict['Prev2_Population'] = [float(pop_prev2)]
-    if 'Prev_Growth' in input_dict: input_dict['Prev_Growth'] = [float(growth_prev)]
-    if 'Prev2_Growth' in input_dict: input_dict['Prev2_Growth'] = [float(growth_prev2)]
+    # Map Numerical Data (Forcing Float conversion)
+    input_dict['Year'] = [float(target_year)]
+    input_dict['Prev_Population'] = [float(pop_prev)]
+    input_dict['Prev2_Population'] = [float(pop_prev2)]
+    input_dict['Prev_Growth'] = [float(growth_prev)]
+    input_dict['Prev2_Growth'] = [float(growth_prev2)]
     
-    # Calculate Required 'Rolling Growth'
-    if 'Rolling Growth' in input_dict:
-        input_dict['Rolling Growth'] = [(float(growth_prev) + float(growth_prev2)) / 2]
+    # Recalculate Rolling Growth
+    input_dict['Rolling Growth'] = [(float(growth_prev) + float(growth_prev2)) / 2.0]
     
-    # Map Region One-Hot Encoding
+    # Map Region
     region_col = f"Region_{selected_region}"
     if region_col in input_dict:
         input_dict[region_col] = [1.0]
     
-    # Final Dataframe Assembly
+    # Final Dataframe
     feature_df = pd.DataFrame(input_dict)[model_features]
     
+    # --- DEBUGGING: Uncomment the line below to see your data shape in the app ---
+    # st.write(feature_df) 
+
     try:
         prediction = model.predict(feature_df)[0]
         
-        # --- THE HOUSING STRATEGY ENGINE ---
+        # Display Results
         st.divider()
-        res_col1, res_col2 = st.columns([1, 2])
+        st.metric(label="Predicted Total Population", value=f"{int(prediction):,}")
+        
+        # Strategy Logic...
         
         with res_col1:
             st.metric(label=f"Projected {target_year} Population", value=f"{int(prediction):,}")
