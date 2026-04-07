@@ -51,9 +51,10 @@ with col2:
 
 # 6. Analysis Logic
 if st.button("Generate Development Strategy", key="deploy_btn"):
+    # Everything below this must be indented by 4 spaces
     input_dict = {col: [0.0] for col in model_features}
     
-    # Map Numerical Data
+    # Map Numerical Data (Forcing Float conversion)
     if 'Year' in input_dict: input_dict['Year'] = [float(target_year)]
     if 'Prev_Population' in input_dict: input_dict['Prev_Population'] = [float(pop_prev)]
     if 'Prev2_Population' in input_dict: input_dict['Prev2_Population'] = [float(pop_prev2)]
@@ -69,10 +70,12 @@ if st.button("Generate Development Strategy", key="deploy_btn"):
     if region_col in input_dict:
         input_dict[region_col] = [1.0]
     
+    # Final Dataframe
     feature_df = pd.DataFrame(input_dict)[model_features]
     
+    # --- THIS WAS THE ERROR AREA ---
     try:
-        # Calculate the Future Total using the New Formula
+        # Treat model output as 'Projected Increase'
         projected_increase = model.predict(feature_df)[0]
         future_total = pop_prev + projected_increase
         
@@ -80,26 +83,23 @@ if st.button("Generate Development Strategy", key="deploy_btn"):
         res_col1, res_col2 = st.columns([1, 2])
         
         with res_col1:
-            st.metric(label=f"Projected {target_year} Total Population", 
-                      value=f"{int(future_total):,}",
-                      delta=f"+{int(projected_increase):,} new residents")
+            st.metric(label="Predicted New Residents", 
+                      value=f"{int(projected_increase):,}",
+                      delta=f"{((projected_increase/pop_prev)*100):.2f}% Growth")
+            
+            st.metric(label=f"Total {target_year} Population", 
+                      value=f"{int(future_total):,}")
         
         with res_col2:
-            # --- TIERS BASED ON TOTAL POPULATION ---
-            if future_total > 5000000:
-                st.success("### 🏙️ TIER 1: MEGA-CITY HUB")
-                st.write("**Strategy:** Vertical High-Density Development")
-                st.info(f"Rationale: Total population exceeds 5 Million. Land value is at a premium; focus on condominiums and mixed-use towers.")
-            
-            elif future_total > 2000000:
-                st.success("### 🏡 TIER 2: REGIONAL GROWTH CENTER")
-                st.write("**Strategy:** Horizontal Suburban Expansion")
-                st.info(f"Rationale: Total population is between 2M and 5M. High demand for gated subdivisions and mid-market housing.")
-            
+            if projected_increase > 400000:
+                st.success("### 🏙️ TIER 1: MASSIVE DEMAND")
+                st.write("**Strategy:** High-rise Vertical Development")
+            elif projected_increase > 150000:
+                st.success("### 🏡 TIER 2: SUSTAINED GROWTH")
+                st.write("**Strategy:** Suburban Gated Communities")
             else:
-                st.warning("### 🏗️ TIER 3: EMERGING / STABLE MARKET")
+                st.warning("### 🏗️ TIER 3: SLOW/STABLE MARKET")
                 st.write("**Strategy:** Niche or Socialized Housing")
-                st.info("Rationale: Total population is below 2 Million. Focus on affordable housing or high-end niche estates.")
                 
     except Exception as e:
         st.error(f"Operational Error: {e}")
