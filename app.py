@@ -73,7 +73,7 @@ if st.button("Generate Development Strategy", key="deploy_btn"):
     # Final Dataframe
     feature_df = pd.DataFrame(input_dict)[model_features]
     
-   try:
+    try:
         # We treat the model output as the 'Projected Increase'
         projected_increase = model.predict(feature_df)[0]
         
